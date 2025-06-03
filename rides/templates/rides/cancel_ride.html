@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Ride - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">Cancel Ride</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Are you sure you want to cancel this ride?
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Ride Details</h5>
+                        <p><strong>Ride ID:</strong> #{{ ride.id }}</p>
+                        <p><strong>Child:</strong> {{ ride.child.first_name }} {{ ride.child.last_name }}</p>
+                        <p><strong>Type:</strong> {{ ride.get_ride_type_display }}</p>
+                        <p><strong>Scheduled Time:</strong> {{ ride.scheduled_time }}</p>
+                        <p><strong>Pickup Location:</strong> {{ ride.pickup_location.address }}</p>
+                        <p><strong>Dropoff Location:</strong> {{ ride.dropoff_location.address }}</p>
+                        
+                        {% if ride.driver %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                This ride has already been accepted by a driver. Cancelling now may affect your rating.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                        <a href="{% url 'ride_details' ride.id %}" class="btn btn-outline-secondary">Go Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

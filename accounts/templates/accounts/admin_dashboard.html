@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Admin Dashboard</h1>
+        <p class="lead">Welcome to the Ride2School administration dashboard, {{ user.first_name }}.</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total Users</h6>
+                        <h2 class="mb-0">{{ total_users }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'admin:accounts_user_changelist' %}" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Active Rides</h6>
+                        <h2 class="mb-0">{{ active_rides }}</h2>
+                    </div>
+                    <i class="fas fa-car fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'admin:rides_riderequest_changelist' %}?status__exact=in_progress" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Pending Drivers</h6>
+                        <h2 class="mb-0">{{ pending_drivers }}</h2>
+                    </div>
+                    <i class="fas fa-id-card fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'admin:accounts_driver_changelist' %}?is_active__exact=0" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total Revenue</h6>
+                        <h2 class="mb-0">R{{ total_revenue|floatformat:2 }}</h2>
+                    </div>
+                    <i class="fas fa-wallet fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="{% url 'admin:payments_payment_changelist' %}" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Pending Driver Approvals -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Pending Driver Approvals</h3>
+            </div>
+            <div class="card-body">
+                {% if pending_driver_list %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Vehicle</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for driver in pending_driver_list %}
+                                    <tr>
+                                        <td>{{ driver.user.get_full_name }}</td>
+                                        <td>{{ driver.user.email }}</td>
+                                        <td>{{ driver.user.phone_number }}</td>
+                                        <td>{{ driver.vehicle_color }} {{ driver.vehicle_model }}</td>
+                                        <td>
+                                            <a href="{% url 'admin:accounts_driver_change' driver.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i> Review
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                        <p>No pending driver approvals.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'admin:accounts_driver_changelist' %}" class="btn btn-outline-primary">View All Drivers</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Rides -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Recent Rides</h3>
+            </div>
+            <div class="card-body">
+                {% if recent_rides %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Child</th>
+                                    <th>Driver</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ride in recent_rides %}
+                                    <tr>
+                                        <td>#{{ ride.id }}</td>
+                                        <td>{{ ride.child.first_name }} {{ ride.child.last_name }}</td>
+                                        <td>
+                                            {% if ride.driver %}
+                                                {{ ride.driver.user.get_full_name }}
+                                            {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if ride.status == 'pending' %}bg-warning
+                                                {% elif ride.status == 'accepted' %}bg-info
+                                                {% elif ride.status == 'in_progress' %}bg-primary
+                                                {% elif ride.status == 'completed' %}bg-success
+                                                {% elif ride.status == 'cancelled' %}bg-danger
+                                                {% endif %}">
+                                                {{ ride.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ ride.scheduled_time|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'admin:rides_riderequest_change' ride.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-car fa-3x mb-3 text-muted"></i>
+                        <p>No rides yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'admin:rides_riderequest_changelist' %}" class="btn btn-outline-primary">View All Rides</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Statistics -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">User Statistics</h3>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3">
+                            <h4>{{ parent_count }}</h4>
+                            <p class="mb-0">Parents</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3">
+                            <h4>{{ driver_count }}</h4>
+                            <p class="mb-0">Drivers</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3">
+                            <h4>{{ child_count }}</h4>
+                            <p class="mb-0">Children</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>New Users This Month</h5>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ new_users_percentage }}%;" aria-valuenow="{{ new_users_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ new_users_this_month }} Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'admin:accounts_user_changelist' %}" class="btn btn-outline-primary">Manage Users</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">System Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Database Status</h6>
+                            <small class="text-muted">PostgreSQL Database</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Operational</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Payment Processing</h6>
+                            <small class="text-muted">Payment Gateway</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Operational</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Email Notifications</h6>
+                            <small class="text-muted">Email Service</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Operational</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Location Services</h6>
+                            <small class="text-muted">Maps API</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Operational</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'admin:index' %}" class="btn btn-outline-primary">System Administration</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin:accounts_user_add' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <span>Add New User</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin:rides_riderequest_add' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-car-side fa-2x mb-2"></i>
+                            <span>Create Ride</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin:accounts_driver_changelist' %}?is_active__exact=0" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-user-check fa-2x mb-2"></i>
+                            <span>Approve Drivers</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'admin:payments_payment_changelist' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i>
+                            <span>View Payments</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

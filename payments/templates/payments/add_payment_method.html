@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Payment Method - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Add Payment Method</h3>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-4" id="paymentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="credit-card-tab" data-bs-toggle="tab" data-bs-target="#credit-card" type="button" role="tab" aria-controls="credit-card" aria-selected="true">Credit Card</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="paypal-tab" data-bs-toggle="tab" data-bs-target="#paypal" type="button" role="tab" aria-controls="paypal" aria-selected="false">PayPal</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="paymentTabsContent">
+                    <!-- Credit Card Form -->
+                    <div class="tab-pane fade show active" id="credit-card" role="tabpanel" aria-labelledby="credit-card-tab">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="payment_type" value="credit_card">
+                            
+                            <div class="mb-3">
+                                <label for="card_number" class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" required>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="expiry_date" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="expiry_date" name="expiry_date" placeholder="MM/YY" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="name_on_card" class="form-label">Name on Card</label>
+                                <input type="text" class="form-control" id="name_on_card" name="name_on_card" required>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="save_card" name="save_card" checked>
+                                <label class="form-check-label" for="save_card">
+                                    Save this card for future payments
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Add Credit Card</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- PayPal Form -->
+                    <div class="tab-pane fade" id="paypal" role="tabpanel" aria-labelledby="paypal-tab">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="payment_type" value="paypal">
+                            
+                            <div class="mb-3">
+                                <label for="paypal_email" class="form-label">PayPal Email</label>
+                                <input type="email" class="form-control" id="paypal_email" name="paypal_email" required>
+                            </div>
+                            
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                You will be redirected to PayPal to complete the connection.
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Connect PayPal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'payment_methods' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Payment Methods
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

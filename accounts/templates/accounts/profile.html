@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">My Profile</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Profile Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Account Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_username" class="form-label">Username</label>
+                            {{ user_form.username }}
+                            {% if user_form.username.errors %}
+                                <div class="text-danger">{{ user_form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_email" class="form-label">Email</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                                <div class="text-danger">{{ user_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name" class="form-label">First Name</label>
+                            {{ user_form.first_name }}
+                            {% if user_form.first_name.errors %}
+                                <div class="text-danger">{{ user_form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name" class="form-label">Last Name</label>
+                            {{ user_form.last_name }}
+                            {% if user_form.last_name.errors %}
+                                <div class="text-danger">{{ user_form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_phone_number" class="form-label">Phone Number</label>
+                        {{ user_form.phone_number }}
+                        {% if user_form.phone_number.errors %}
+                            <div class="text-danger">{{ user_form.phone_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if user.user_type == 'parent' %}
+                        <h5 class="mb-3 mt-4">Parent Information</h5>
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Address</label>
+                            {{ profile_form.address }}
+                            {% if profile_form.address.errors %}
+                                <div class="text-danger">{{ profile_form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_emergency_contact" class="form-label">Emergency Contact</label>
+                            {{ profile_form.emergency_contact }}
+                            {% if profile_form.emergency_contact.errors %}
+                                <div class="text-danger">{{ profile_form.emergency_contact.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% elif user.user_type == 'driver' %}
+                        <h5 class="mb-3 mt-4">Driver Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="id_license_number" class="form-label">License Number</label>
+                                {{ profile_form.license_number }}
+                                {% if profile_form.license_number.errors %}
+                                    <div class="text-danger">{{ profile_form.license_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_license_expiry" class="form-label">License Expiry</label>
+                                {{ profile_form.license_expiry }}
+                                {% if profile_form.license_expiry.errors %}
+                                    <div class="text-danger">{{ profile_form.license_expiry.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Vehicle Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="id_vehicle_model" class="form-label">Vehicle Model</label>
+                                {{ profile_form.vehicle_model }}
+                                {% if profile_form.vehicle_model.errors %}
+                                    <div class="text-danger">{{ profile_form.vehicle_model.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_vehicle_color" class="form-label">Vehicle Color</label>
+                                {{ profile_form.vehicle_color }}
+                                {% if profile_form.vehicle_color.errors %}
+                                    <div class="text-danger">{{ profile_form.vehicle_color.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="id_vehicle_plate" class="form-label">License Plate</label>
+                                {{ profile_form.vehicle_plate }}
+                                {% if profile_form.vehicle_plate.errors %}
+                                    <div class="text-danger">{{ profile_form.vehicle_plate.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_vehicle_year" class="form-label">Vehicle Year</label>
+                                {{ profile_form.vehicle_year }}
+                                {% if profile_form.vehicle_year.errors %}
+                                    <div class="text-danger">{{ profile_form.vehicle_year.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Insurance Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="id_insurance_provider" class="form-label">Insurance Provider</label>
+                                {{ profile_form.insurance_provider }}
+                                {% if profile_form.insurance_provider.errors %}
+                                    <div class="text-danger">{{ profile_form.insurance_provider.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_insurance_policy_number" class="form-label">Policy Number</label>
+                                {{ profile_form.insurance_policy_number }}
+                                {% if profile_form.insurance_policy_number.errors %}
+                                    <div class="text-danger">{{ profile_form.insurance_policy_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your account status: 
+                            {% if profile_form.instance.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-warning">Pending Approval</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Profile Picture</h3>
+            </div>
+            <div class="card-body text-center">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-5x"></i>
+                    </div>
+                {% endif %}
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_profile_picture" class="form-label">Upload New Picture</label>
+                        <input type="file" name="profile_picture" id="id_profile_picture" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">Upload</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Account Security</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'password_reset' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-key me-2"></i> Change Password
+                    </a>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Keep your account secure by using a strong password and changing it regularly.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

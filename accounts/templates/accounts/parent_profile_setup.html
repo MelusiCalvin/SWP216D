@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Your Parent Profile - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Complete Your Parent Profile</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-4">Please provide the following information to complete your parent profile.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">Home Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_emergency_contact" class="form-label">Emergency Contact Number</label>
+                        {{ form.emergency_contact }}
+                        {% if form.emergency_contact.errors %}
+                            <div class="text-danger">{{ form.emergency_contact.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Complete Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

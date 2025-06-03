@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Available Rides - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Available Rides</h1>
+        <p class="lead">Find and accept rides that match your schedule.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Available Ride Requests</h3>
+            </div>
+            <div class="card-body">
+                {% if available_rides %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Child</th>
+                                    <th>Parent</th>
+                                    <th>Type</th>
+                                    <th>Scheduled Time</th>
+                                    <th>Pickup Location</th>
+                                    <th>Dropoff Location</th>
+                                    <th>Estimated Fare</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ride in available_rides %}
+                                    <tr>
+                                        <td>#{{ ride.id }}</td>
+                                        <td>{{ ride.child.first_name }} {{ ride.child.last_name }}</td>
+                                        <td>{{ ride.parent.user.get_full_name }}</td>
+                                        <td>{{ ride.get_ride_type_display }}</td>
+                                        <td>{{ ride.scheduled_time }}</td>
+                                        <td>{{ ride.pickup_location.address|truncatechars:20 }}</td>
+                                        <td>{{ ride.dropoff_location.address|truncatechars:20 }}</td>
+                                        <td>${{ ride.estimated_fare }}</td>
+                                        <td>
+                                            <a href="{% url 'ride_details' ride.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <a href="{% url 'accept_ride' ride.id %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check"></i> Accept
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-car-side fa-3x mb-3 text-muted"></i>
+                        <p>There are no available rides at the moment.</p>
+                        <p class="text-muted">Check back later for new ride requests.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="ride_type" class="form-label">Ride Type</label>
+                        <select class="form-select" id="ride_type" name="ride_type">
+                            <option value="">All Types</option>
+                            <option value="home_to_school">Home to School</option>
+                            <option value="school_to_home">School to Home</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="Enter area or zip code">
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <a href="{% url 'available_rides' %}" class="btn btn-outline-secondary">Clear Filters</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

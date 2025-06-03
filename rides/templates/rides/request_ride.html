@@ -1,0 +1,434 @@
+<!-- templates/rides/request_ride.html -->
+{% extends 'base.html' %}
+
+{% block title %}Request Ride - Ride2School{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Request a Ride</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" id="ride-request-form">
+                        {% csrf_token %}
+                        
+                        <!-- Hidden fields for coordinates and place IDs -->
+                        <input type="hidden" id="pickup-latitude" name="pickup_latitude">
+                        <input type="hidden" id="pickup-longitude" name="pickup_longitude">
+                        <input type="hidden" id="pickup-place-id" name="pickup_place_id">
+                        <input type="hidden" id="dropoff-latitude" name="dropoff_latitude">
+                        <input type="hidden" id="dropoff-longitude" name="dropoff_longitude">
+                        <input type="hidden" id="dropoff-place-id" name="dropoff_place_id">
+                        
+                        <div class="mb-3">
+                            <label for="{{ ride_form.child.id_for_label }}" class="form-label">Child</label>
+                            {{ ride_form.child }}
+                        </div>
+                        
+                        <div class="location-input-group">
+                            <label for="id_pickup_address" class="form-label">Pickup Location</label>
+                            <div class="input-group">
+                                {{ ride_form.pickup_address }}
+                                <button type="button" class="map-pin-btn" onclick="selectLocationOnMap('pickup')">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                            </div>
+                            <div id="pickup-info" class="location-info">
+                                <small class="text-muted">Selected location will appear here</small>
+                            </div>
+                        </div>
+                        
+                        <div class="location-input-group">
+                            <label for="id_pickup_address" class="form-label">Dropoff Location</label>
+                            <div class="input-group">
+                                {{ ride_form.dropoff_address }}
+                                <button type="button" class="map-pin-btn" onclick="selectLocationOnMap('dropoff')">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                            </div>
+                            <div id="dropoff-info" class="location-info">
+                                <small class="text-muted">Selected location will appear here</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ ride_form.scheduled_time.id_for_label }}" class="form-label">Pickup Time</label>
+                            {{ ride_form.scheduled_time }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ ride_form.special_instructions.id_for_label }}" class="form-label">Special Instructions (Optional)</label>
+                            {{ ride_form.special_instructions }}
+                        </div>
+                        
+                        <!-- Recurring Ride Section -->
+                        <div class="recurring-section">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring">
+                                <label class="form-check-label" for="is_recurring">
+                                    <strong>Make this a recurring ride</strong>
+                                </label>
+                            </div>
+                            
+                            <div id="recurring-options" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Days of the week</label>
+                                    {{ recurring_form.days_of_week }}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="{{ recurring_form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                                        {{ recurring_form.start_date }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ recurring_form.end_date.id_for_label }}" class="form-label">End Date (Optional)</label>
+                                        {{ recurring_form.end_date }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="fare-estimate" class="fare-estimate" style="display: none;">
+                            <h6>Fare Estimate</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>Distance:</span>
+                                <span id="estimated-distance">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Estimated Fare:</span>
+                                <strong id="estimated-fare">-</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
+                                <i class="fas fa-car me-2"></i> Request Ride
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Select Location on Map</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" class="map-container"></div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        Click on the map to select pickup or dropoff location, or use the 📍 button next to address fields.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places&callback=initMap" async defer></script>
+
+<script>
+let map;
+let pickupMarker;
+let dropoffMarker;
+let pickupAutocomplete;
+let dropoffAutocomplete;
+let currentSelectionType = null;
+
+// Initialize the map
+function initMap() {
+    // Default location (Johannesburg, South Africa)
+    const defaultLocation = { lat: -26.2041, lng: 28.0473 };
+    
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: defaultLocation,
+    });
+    
+    // Initialize autocomplete
+    initAutocomplete();
+    
+    // Add click listener to map
+    map.addListener("click", (event) => {
+        if (currentSelectionType) {
+            setLocationFromMap(event.latLng, currentSelectionType);
+            currentSelectionType = null;
+        }
+    });
+    
+    // Try to get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                map.setCenter(userLocation);
+            },
+            () => {
+                console.log("Geolocation failed, using default location");
+            }
+        );
+    }
+}
+
+// Initialize autocomplete for address inputs
+function initAutocomplete() {
+    const options = {
+        componentRestrictions: { country: "za" },
+        fields: ["place_id", "geometry", "name", "formatted_address"],
+    };
+    
+    pickupAutocomplete = new google.maps.places.Autocomplete(
+        document.getElementById("id_pickup_address"),
+        options
+    );
+    
+    dropoffAutocomplete = new google.maps.places.Autocomplete(
+        document.getElementById("id_dropoff_address"),
+        options
+    );
+    
+    // Add listeners for place selection
+    pickupAutocomplete.addListener("place_changed", () => {
+        const place = pickupAutocomplete.getPlace();
+        setLocationFromPlace(place, 'pickup');
+    });
+    
+    dropoffAutocomplete.addListener("place_changed", () => {
+        const place = dropoffAutocomplete.getPlace();
+        setLocationFromPlace(place, 'dropoff');
+    });
+}
+
+// Set location from autocomplete place
+function setLocationFromPlace(place, type) {
+    if (!place.geometry || !place.geometry.location) {
+        alert("No details available for input: '" + place.name + "'");
+        return;
+    }
+    
+    const location = place.geometry.location;
+    const address = place.formatted_address || place.name;
+    
+    // Update hidden fields
+    document.getElementById(`${type}-latitude`).value = location.lat();
+    document.getElementById(`${type}-longitude`).value = location.lng();
+    document.getElementById(`${type}-place-id`).value = place.place_id || '';
+    
+    // Update address field
+    document.getElementById(`id_${type}_address`).value = address;
+    
+    // Add marker to map
+    addMarkerToMap(location, type, address);
+    
+    // Show location info
+    showLocationInfo(type, address, location.lat(), location.lng());
+    
+    // Calculate fare if both locations are set
+    calculateFareEstimate();
+}
+
+// Set location from map click
+function setLocationFromMap(latLng, type) {
+    const geocoder = new google.maps.Geocoder();
+    
+    geocoder.geocode({ location: latLng }, (results, status) => {
+        if (status === "OK" && results[0]) {
+            const address = results[0].formatted_address;
+            const placeId = results[0].place_id;
+            
+            // Update fields
+            document.getElementById(`id_${type}_address`).value = address;
+            document.getElementById(`${type}-latitude`).value = latLng.lat();
+            document.getElementById(`${type}-longitude`).value = latLng.lng();
+            document.getElementById(`${type}-place-id`).value = placeId;
+            
+            // Add marker
+            addMarkerToMap(latLng, type, address);
+            
+            // Show location info
+            showLocationInfo(type, address, latLng.lat(), latLng.lng());
+            
+            // Calculate fare
+            calculateFareEstimate();
+        } else {
+            alert("Geocoder failed: " + status);
+        }
+    });
+}
+
+// Add marker to map
+function addMarkerToMap(location, type, address) {
+    // Remove existing marker
+    if (type === 'pickup' && pickupMarker) {
+        pickupMarker.setMap(null);
+    } else if (type === 'dropoff' && dropoffMarker) {
+        dropoffMarker.setMap(null);
+    }
+    
+    // Create new marker
+    const marker = new google.maps.Marker({
+        position: location,
+        map: map,
+        title: address,
+        icon: {
+            url: type === 'pickup' ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            scaledSize: new google.maps.Size(40, 40)
+        }
+    });
+    
+    // Store marker reference
+    if (type === 'pickup') {
+        pickupMarker = marker;
+    } else {
+        dropoffMarker = marker;
+    }
+    
+    // Center map on new marker
+    map.setCenter(location);
+}
+
+// Show location information
+function showLocationInfo(type, address, lat, lng) {
+    const infoDiv = document.getElementById(`${type}-info`);
+    infoDiv.innerHTML = `
+        <strong>${type === 'pickup' ? 'Pickup' : 'Dropoff'} Location:</strong><br>
+        ${address}<br>
+        <small class="text-muted">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</small>
+    `;
+    infoDiv.style.display = 'block';
+}
+
+// Select location on map
+function selectLocationOnMap(type) {
+    currentSelectionType = type;
+    alert(`Click on the map to select ${type} location`);
+}
+
+// Calculate fare estimate
+function calculateFareEstimate() {
+    const pickupLat = document.getElementById('pickup-latitude').value;
+    const pickupLng = document.getElementById('pickup-longitude').value;
+    const dropoffLat = document.getElementById('dropoff-latitude').value;
+    const dropoffLng = document.getElementById('dropoff-longitude').value;
+    
+    if (pickupLat && pickupLng && dropoffLat && dropoffLng) {
+        const service = new google.maps.DistanceMatrixService();
+        
+        service.getDistanceMatrix({
+            origins: [new google.maps.LatLng(pickupLat, pickupLng)],
+            destinations: [new google.maps.LatLng(dropoffLat, dropoffLng)],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.METRIC,
+        }, (response, status) => {
+            if (status === 'OK') {
+                const distance = response.rows[0].elements[0].distance;
+                const duration = response.rows[0].elements[0].duration;
+                
+                if (distance && duration) {
+                    const distanceKm = distance.value / 1000;
+                    const baseFare = 30.00;
+                    const ratePerKm = 8.50;
+                    const estimatedFare = baseFare + (distanceKm * ratePerKm);
+                    
+                    // Show fare estimate
+                    document.getElementById('estimated-distance').textContent = distance.text;
+                    document.getElementById('estimated-fare').textContent = `R ${estimatedFare.toFixed(2)}`;
+                    document.getElementById('fare-estimate').style.display = 'block';
+                    
+                    // Enable submit button
+                    document.getElementById('submit-btn').disabled = false;
+                }
+            }
+        });
+    }
+}
+
+// Toggle recurring options
+document.getElementById('is_recurring').addEventListener('change', function() {
+    const recurringOptions = document.getElementById('recurring-options');
+    if (this.checked) {
+        recurringOptions.style.display = 'block';
+    } else {
+        recurringOptions.style.display = 'none';
+    }
+});
+window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('id_scheduled_time');
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+    const minDateTime = now.toISOString().slice(0, 16);
+
+    input.min = minDateTime;
+    input.value = minDateTime;
+
+    // Get recurring fields
+    const startDate = document.getElementById('{{ recurring_form.start_date.id_for_label }}');
+    const daysOfWeek = document.querySelector('[name="days_of_week"]');
+
+    // Always remove required on load
+    if (startDate) startDate.removeAttribute('required');
+    if (daysOfWeek) daysOfWeek.removeAttribute('required');
+
+    // Toggle required attribute when recurring checkbox changes
+    const recurringCheckbox = document.getElementById('is_recurring');
+    recurringCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            if (startDate) startDate.setAttribute('required', 'required');
+            if (daysOfWeek) daysOfWeek.setAttribute('required', 'required');
+        } else {
+            if (startDate) startDate.removeAttribute('required');
+            if (daysOfWeek) daysOfWeek.removeAttribute('required');
+        }
+    });
+
+    // Enable submit button only when all required fields are filled
+    const form = document.getElementById('ride-request-form');
+    form.addEventListener('input', () => {
+        const pickupAddress = document.getElementById('id_pickup_address').value.trim();
+        const dropoffAddress = document.getElementById('id_dropoff_address').value.trim();
+        const scheduledTime = document.getElementById('id_scheduled_time').value.trim();
+        const childSelect = document.getElementById('{{ ride_form.child.id_for_label }}');
+        const isRecurring = recurringCheckbox.checked;
+
+        let recurringValid = true;
+        if (isRecurring) {
+            recurringValid = daysOfWeek && daysOfWeek.value && startDate && startDate.value;
+        }
+
+        if (
+            pickupAddress &&
+            dropoffAddress &&
+            scheduledTime &&
+            childSelect.value &&
+            (!isRecurring || recurringValid)
+        ) {
+            document.getElementById('submit-btn').disabled = false;
+        } else {
+            document.getElementById('submit-btn').disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}

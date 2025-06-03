@@ -1,0 +1,136 @@
+<!-- templates/rides/rate_ride.html -->
+{% extends 'base.html' %}
+
+{% block title %}Rate Ride - Ride2School{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rating-stars {
+        font-size: 2rem;
+        color: #ffc107;
+    }
+    .rating-input {
+        display: none;
+    }
+    .rating-label {
+        cursor: pointer;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+    .rating-label:hover,
+    .rating-label.active {
+        color: #ffc107;
+    }
+    .ride-summary {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Rate Your Ride</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Ride Summary -->
+                    <div class="ride-summary">
+                        <h5>Ride Summary</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Child:</strong> {{ ride.child.first_name }} {{ ride.child.last_name }}</p>
+                                <p><strong>Date:</strong> {{ ride.pickup_time|date:"d M Y" }}</p>
+                                <p><strong>Time:</strong> {{ ride.pickup_time|time:"H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Driver:</strong> {{ ride.driver.user.first_name }} {{ ride.driver.user.last_name }}</p>
+                                <p><strong>Vehicle:</strong> {{ ride.driver.vehicle_color }} {{ ride.driver.vehicle_make }} {{ ride.driver.vehicle_model }}</p>
+                                <p><strong>Fare:</strong> R {{ ride.actual_fare|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4 text-center">
+                            <h6>How would you rate this ride?</h6>
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                    <input type="radio" name="rating" value="{{ forloop.counter }}" id="star{{ forloop.counter }}" class="rating-input">
+                                    <label for="star{{ forloop.counter }}" class="rating-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label">Comments (Optional)</label>
+                            {{ form.comment }}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-star me-2"></i> Submit Rating
+                            </button>
+                            <a href="{% url 'ride_details' ride.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Ride Details
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingInputs = document.querySelectorAll('.rating-input');
+    const ratingLabels = document.querySelectorAll('.rating-label');
+    
+    // Handle rating selection
+    ratingInputs.forEach((input, index) => {
+        input.addEventListener('change', function() {
+            updateStars(index + 1);
+        });
+    });
+    
+    // Handle hover effects
+    ratingLabels.forEach((label, index) => {
+        label.addEventListener('mouseenter', function() {
+            updateStars(index + 1);
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            const checkedInput = document.querySelector('.rating-input:checked');
+            if (checkedInput) {
+                const checkedIndex = Array.from(ratingInputs).indexOf(checkedInput);
+                updateStars(checkedIndex + 1);
+            } else {
+                updateStars(0);
+            }
+        });
+    });
+    
+    function updateStars(rating) {
+        ratingLabels.forEach((label, index) => {
+            if (index < rating) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

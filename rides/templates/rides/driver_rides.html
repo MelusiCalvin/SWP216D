@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}My Rides - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">My Rides</h1>
+    </div>
+</div>
+
+<!-- In Progress Rides -->
+{% if in_progress_rides %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">In Progress Rides</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Child</th>
+                                <th>Parent</th>
+                                <th>Type</th>
+                                <th>Pickup Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ride in in_progress_rides %}
+                                <tr>
+                                    <td>#{{ ride.id }}</td>
+                                    <td>{{ ride.child.first_name }} {{ ride.child.last_name }}</td>
+                                    <td>{{ ride.parent.user.get_full_name }}</td>
+                                    <td>{{ ride.get_ride_type_display }}</td>
+                                    <td>{{ ride.pickup_time }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ ride.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'ride_details' ride.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'complete_ride' ride.id %}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Complete
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Upcoming Rides -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Upcoming Rides</h3>
+            </div>
+            <div class="card-body">
+                {% if upcoming_rides %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Child</th>
+                                    <th>Parent</th>
+                                    <th>Type</th>
+                                    <th>Scheduled Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ride in upcoming_rides %}
+                                    <tr>
+                                        <td>#{{ ride.id }}</td>
+                                        <td>{{ ride.child.first_name }} {{ ride.child.last_name }}</td>
+                                        <td>{{ ride.parent.user.get_full_name }}</td>
+                                        <td>{{ ride.get_ride_type_display }}</td>
+                                        <td>{{ ride.scheduled_time }}</td>
+                                        <td>
+                                            <span class="badge bg-success">
+                                                {{ ride.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'ride_details' ride.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            {% if ride.status == 'accepted' %}
+                                                <a href="{% url 'start_ride' ride.id %}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-play"></i> Start
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-alt fa-3x mb-3 text-muted"></i>
+                        <p class="mb-3">You don't have any upcoming rides.</p>
+                        <a href="{% url 'available_rides' %}" class="btn btn-primary">Find Available Rides</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Past Rides -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Past Rides</h3>
+            </div>
+            <div class="card-body">
+                {% if past_rides %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Child</th>
+                                    <th>Parent</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Fare</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ride in past_rides %}
+                                    <tr>
+                                        <td>#{{ ride.id }}</td>
+                                        <td>{{ ride.child.first_name }} {{ ride.child.last_name }}</td>
+                                        <td>{{ ride.parent.user.get_full_name }}</td>
+                                        <td>{{ ride.get_ride_type_display }}</td>
+                                        <td>{{ ride.scheduled_time|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge {% if ride.status == 'completed' %}bg-success{% elif ride.status == 'cancelled' %}bg-danger{% endif %}">
+                                                {{ ride.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>${{ ride.actual_fare|default:ride.estimated_fare }}</td>
+                                        <td>
+                                            <a href="{% url 'ride_details' ride.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x mb-3 text-muted"></i>
+                        <p>You don't have any past rides.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

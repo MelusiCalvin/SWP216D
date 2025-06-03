@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Ride2School - Safe Transportation for Children{% endblock %}
+
+{% block content %}
+<div class="row align-items-center">
+    <div class="col-lg-6">
+        <h1 class="display-4 mb-4">Safe Rides for Your Children</h1>
+        <p class="lead mb-4">
+            Ride2School provides safe and reliable transportation for children between home and school.
+            Our trusted drivers and real-time tracking give parents peace of mind.
+        </p>
+        
+        {% if user.is_authenticated %}
+            {% if user.user_type == 'parent' %}
+                <a href="{% url 'request_ride' %}" class="btn btn-primary btn-lg me-3">Request a Ride</a>
+                <a href="{% url 'my_rides' %}" class="btn btn-secondary btn-lg">View My Rides</a>
+            {% elif user.user_type == 'driver' %}
+                <a href="{% url 'available_rides' %}" class="btn btn-primary btn-lg me-3">Available Rides</a>
+                <a href="{% url 'my_rides' %}" class="btn btn-secondary btn-lg">View My Rides</a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-3">Sign Up</a>
+            <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">Login</a>
+        {% endif %}
+    </div>
+    <div class="col-lg-6 mt-4 mt-lg-0">
+        <img src="https://via.placeholder.com/600x400" alt="Children transportation" class="img-fluid rounded">
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">How It Works</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-plus fa-3x mb-3 text-primary"></i>
+                <h3 class="card-title">1. Sign Up</h3>
+                <p class="card-text">Create an account as a parent and add your children's information.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-3x mb-3 text-primary"></i>
+                <h3 class="card-title">2. Schedule Rides</h3>
+                <p class="card-text">Request one-time or recurring rides for your children.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-map-marked-alt fa-3x mb-3 text-primary"></i>
+                <h3 class="card-title">3. Track in Real-Time</h3>
+                <p class="card-text">Monitor your child's journey in real-time and receive notifications.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">Why Choose Ride2School?</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="card-title"><i class="fas fa-shield-alt text-primary me-2"></i> Safety First</h3>
+                <p class="card-text">All our drivers undergo thorough background checks and vehicle inspections. Your child's safety is our top priority.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="card-title"><i class="fas fa-clock text-primary me-2"></i> Reliability</h3>
+                <p class="card-text">Our drivers are punctual and follow optimized routes to ensure your child arrives on time, every time.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="card-title"><i class="fas fa-mobile-alt text-primary me-2"></i> Real-Time Tracking</h3>
+                <p class="card-text">Track your child's ride in real-time and receive notifications at every step of the journey.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="card-title"><i class="fas fa-calendar-check text-primary me-2"></i> Flexible Scheduling</h3>
+                <p class="card-text">Schedule one-time rides or set up recurring rides for the entire school year.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">Testimonials</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <p class="card-text">
+                    <i class="fas fa-quote-left text-primary me-2"></i>
+                    Ride2School has been a lifesaver for our family. With both parents working full-time, getting our kids to and from school was a daily challenge. Now, we have peace of mind knowing they're in safe hands.
+                    <i class="fas fa-quote-right text-primary ms-2"></i>
+                </p>
+                <p class="text-end mb-0"><strong>- Sarah Johnson</strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <p class="card-text">
+                    <i class="fas fa-quote-left text-primary me-2"></i>
+                    The real-time tracking feature is amazing! I can see exactly where my child is during the ride, and the notifications keep me informed every step of the way.
+                    <i class="fas fa-quote-right text-primary ms-2"></i>
+                </p>
+                <p class="text-end mb-0"><strong>- Michael Rodriguez</strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <p class="card-text">
+                    <i class="fas fa-quote-left text-primary me-2"></i>
+                    As a single parent, Ride2School has been a game-changer. The recurring ride feature means I can set it up once and not worry about transportation for the rest of the school year.
+                    <i class="fas fa-quote-right text-primary ms-2"></i>
+                </p>
+                <p class="text-end mb-0"><strong>- Emily Chen</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

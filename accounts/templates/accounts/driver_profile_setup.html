@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Your Driver Profile - Ride2School{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Complete Your Driver Profile</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-4">Please provide the following information to complete your driver profile. All drivers must pass a background check before being approved.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">License Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_license_number" class="form-label">License Number</label>
+                            {{ form.license_number }}
+                            {% if form.license_number.errors %}
+                                <div class="text-danger">{{ form.license_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_license_expiry" class="form-label">License Expiry Date</label>
+                            {{ form.license_expiry }}
+                            {% if form.license_expiry.errors %}
+                                <div class="text-danger">{{ form.license_expiry.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3 mt-4">Vehicle Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_vehicle_model" class="form-label">Vehicle Model</label>
+                            {{ form.vehicle_model }}
+                            {% if form.vehicle_model.errors %}
+                                <div class="text-danger">{{ form.vehicle_model.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_vehicle_color" class="form-label">Vehicle Color</label>
+                            {{ form.vehicle_color }}
+                            {% if form.vehicle_color.errors %}
+                                <div class="text-danger">{{ form.vehicle_color.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_vehicle_plate" class="form-label">License Plate</label>
+                            {{ form.vehicle_plate }}
+                            {% if form.vehicle_plate.errors %}
+                                <div class="text-danger">{{ form.vehicle_plate.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_vehicle_year" class="form-label">Vehicle Year</label>
+                            {{ form.vehicle_year }}
+                            {% if form.vehicle_year.errors %}
+                                <div class="text-danger">{{ form.vehicle_year.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3 mt-4">Insurance Information</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_insurance_provider" class="form-label">Insurance Provider</label>
+                            {{ form.insurance_provider }}
+                            {% if form.insurance_provider.errors %}
+                                <div class="text-danger">{{ form.insurance_provider.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_insurance_policy_number" class="form-label">Policy Number</label>
+                            {{ form.insurance_policy_number }}
+                            {% if form.insurance_policy_number.errors %}
+                                <div class="text-danger">{{ form.insurance_policy_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your account will be reviewed by our team before you can start accepting rides. This process typically takes 1-2 business days.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Complete Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

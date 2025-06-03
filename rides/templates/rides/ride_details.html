@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+
+{% block title %}Ride Details - Ride2School{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    #map {
+        height: 300px;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #4CAF50;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #4CAF50;
+    }
+    
+    .timeline-item.active::before {
+        background-color: #FFC107;
+    }
+    
+    .timeline-item.completed::before {
+        background-color: #4CAF50;
+    }
+    
+    .timeline-item.cancelled::before {
+        background-color: #F44336;
+    }
+    
+    .timeline-content {
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Ride Details</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Ride Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Basic Information</h5>
+                        <p><strong>Ride ID:</strong> #{{ ride.id }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge 
+                                {% if ride.status == 'pending' %}bg-warning
+                                {% elif ride.status == 'accepted' %}bg-info
+                                {% elif ride.status == 'in_progress' %}bg-primary
+                                {% elif ride.status == 'completed' %}bg-success
+                                {% elif ride.status == 'cancelled' %}bg-danger
+                                {% endif %}">
+                                {{ ride.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>Type:</strong> {{ ride.get_ride_type_display }}</p>
+                        <p><strong>Scheduled Time:</strong> {{ ride.scheduled_time }}</p>
+                        {% if ride.pickup_time %}
+                            <p><strong>Pickup Time:</strong> {{ ride.pickup_time }}</p>
+                        {% endif %}
+                        {% if ride.dropoff_time %}
+                            <p><strong>Dropoff Time:</strong> {{ ride.dropoff_time }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Child Information</h5>
+                        <p><strong>Name:</strong> {{ ride.child.first_name }} {{ ride.child.last_name }}</p>
+                        <p><strong>School:</strong> {{ ride.child.school_name }}</p>
+                        <p><strong>Grade:</strong> {{ ride.child.grade }}</p>
+                        {% if ride.special_instructions %}
+                            <p><strong>Special Instructions:</strong> {{ ride.special_instructions }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">Locations</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Pickup:</strong> {{ ride.pickup_location.address }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Dropoff:</strong> {{ ride.dropoff_location.address }}</p>
+                    </div>
+                </div>
+                
+                <div id="map" class="mt-3"></div>
+                
+                {% if ride.is_recurring %}
+                    <h5 class="mt-4">Recurring Schedule</h5>
+                    <p><strong>Days:</strong>
+                        {% for day_num in days_of_week %}
+                            {% if day_num == '0' %}Monday{% endif %}
+                            {% if day_num == '1' %}Tuesday{% endif %}
+                            {% if day_num == '2' %}Wednesday{% endif %}
+                            {% if day_num == '3' %}Thursday{% endif %}
+                            {% if day_num == '4' %}Friday{% endif %}
+                            {% if day_num == '5' %}Saturday{% endif %}
+                            {% if day_num == '6' %}Sunday{% endif %}
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    <p><strong>Start Date:</strong> {{ ride.recurring_ride.start_date }}</p>
+                    {% if ride.recurring_ride.end_date %}
+                        <p><strong>End Date:</strong> {{ ride.recurring_ride.end_date }}</p>
+                    {% endif %}
+                {% endif %}
+                
+                <h5 class="mt-4">Fare Information</h5>
+                <p><strong>Estimated Fare:</strong> R{{ ride.estimated_fare }}</p>
+                {% if ride.actual_fare %}
+                    <p><strong>Actual Fare:</strong> R{{ ride.actual_fare }}</p>
+                {% endif %}
+                
+                {% if ride.driver %}
+                    <h5 class="mt-4">Driver Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ ride.driver.user.get_full_name }}</p>
+                            <p><strong>Phone:</strong> {{ ride.driver.user.phone_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Vehicle:</strong> {{ ride.driver.vehicle_color }} {{ ride.driver.vehicle_model }}</p>
+                            <p><strong>License Plate:</strong> {{ ride.driver.vehicle_plate }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if has_rating %}
+                    <h5 class="mt-4">Rating</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <strong>{{ ride.rating.rating }}/5</strong>
+                        </div>
+                        <div>
+                            {% for i in '12345'|make_list %}
+                                {% if forloop.counter <= ride.rating.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if ride.rating.comment %}
+                        <p class="mt-2"><strong>Comment:</strong> {{ ride.rating.comment }}</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Ride Timeline</h3>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item completed">
+                        <div class="timeline-content">
+                            <h5>Ride Requested</h5>
+                            <p>{{ ride.created_at }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if ride.status == 'cancelled' %}
+                        <div class="timeline-item cancelled">
+                            <div class="timeline-content">
+                                <h5>Ride Cancelled</h5>
+                                <p>{{ ride.updated_at }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="timeline-item {% if ride.status == 'pending' %}active{% elif ride.status != 'pending' %}completed{% endif %}">
+                            <div class="timeline-content">
+                                <h5>Driver Assignment</h5>
+                                {% if ride.driver %}
+                                    <p>{{ ride.driver.user.get_full_name }} assigned at {{ ride.updated_at }}</p>
+                                {% else %}
+                                    <p>Waiting for driver assignment</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if ride.status == 'in_progress' %}active{% elif ride.status == 'completed' %}completed{% endif %}">
+                            <div class="timeline-content">
+                                <h5>Ride Started</h5>
+                                {% if ride.pickup_time %}
+                                    <p>Picked up at {{ ride.pickup_time }}</p>
+                                {% else %}
+                                    <p>Waiting for pickup</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if ride.status == 'completed' %}completed{% endif %}">
+                            <div class="timeline-content">
+                                <h5>Ride Completed</h5>
+                                {% if ride.dropoff_time %}
+                                    <p>Dropped off at {{ ride.dropoff_time }}</p>
+                                {% else %}
+                                    <p>Waiting for dropoff</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item {% if has_rating %}completed{% endif %}">
+                            <div class="timeline-content">
+                                <h5>Rating</h5>
+                                {% if has_rating %}
+                                    <p>Rated {{ ride.rating.rating }}/5 at {{ ride.rating.created_at }}</p>
+                                {% else %}
+                                    <p>Waiting for rating</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Actions</h3>
+            </div>
+            <div class="card-body">
+                {% if user.user_type == 'parent' %}
+                    {% if ride.status == 'pending' or ride.status == 'accepted' %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'cancel_ride' ride.id %}" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-2"></i> Cancel Ride
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ride.status == 'completed' and not has_rating %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'rate_ride' ride.id %}" class="btn btn-primary">
+                                <i class="fas fa-star me-2"></i> Rate Ride
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ride.status == 'completed' and not ride.payment %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'process_payment' ride.id %}" class="btn btn-success">
+                                <i class="fas fa-credit-card me-2"></i> Process Payment
+                            </a>
+                        </div>
+                    {% endif %}
+                {% elif user.user_type == 'driver' %}
+                    {% if ride.status == 'pending' and not ride.driver %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'accept_ride' ride.id %}" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i> Accept Ride
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ride.status == 'accepted' and ride.driver.user == user %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'start_ride' ride.id %}" class="btn btn-primary">
+                                <i class="fas fa-play-circle me-2"></i> Start Ride
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ride.status == 'in_progress' and ride.driver.user == user %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'complete_ride' ride.id %}" class="btn btn-success">
+                                <i class="fas fa-check-circle me-2"></i> Complete Ride
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'my_rides' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to My Rides
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% if ride.status == 'in_progress' %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Live Tracking</h3>
+                </div>
+                <div class="card-body">
+                    <div id="tracking_status" class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Tracking ride in real-time...</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Estimated arrival time: <span id="eta">Calculating...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Need Help?</h3>
+            </div>
+            <div class="card-body">
+                <p>If you need assistance with this ride, please contact our support team:</p>
+                <p><i class="fas fa-phone me-2"></i> (555) 123-4567</p>
+                <p><i class="fas fa-envelope me-2"></i> support@ride2school.com</p>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    For emergencies, please call 911.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        const map = L.map('map').setView([40.7128, -74.0060], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add markers for pickup and dropoff locations
+        const pickupLat = {{ ride.pickup_location.latitude }};
+        const pickupLng = {{ ride.pickup_location.longitude }};
+        const dropoffLat = {{ ride.dropoff_location.latitude }};
+        const dropoffLng = {{ ride.dropoff_location.longitude }};
+        
+        const pickupMarker = L.marker([pickupLat, pickupLng], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background-color: #4CAF50; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map).bindPopup('Pickup Location');
+        
+        const dropoffMarker = L.marker([dropoffLat, dropoffLng], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background-color: #F44336; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map).bindPopup('Dropoff Location');
+        
+        // Fit bounds to show both markers
+        const bounds = L.latLngBounds([
+            [pickupLat, pickupLng],
+            [dropoffLat, dropoffLng]
+        ]);
+        map.fitBounds(bounds, { padding: [50, 50] });
+        
+        {% if ride.status == 'in_progress' %}
+            // Add driver marker
+            let driverMarker;
+            
+            // Simulate driver movement
+            function updateDriverLocation() {
+                // In a real app, this would fetch the driver's location from the server
+                // For this example, we'll simulate movement along a path
+                
+                // Generate a random position between pickup and dropoff
+                const progress = Math.random();
+                const lat = pickupLat + (dropoffLat - pickupLat) * progress;
+                const lng = pickupLng + (dropoffLng - pickupLng) * progress;
+                
+                if (driverMarker) {
+                    driverMarker.setLatLng([lat, lng]);
+                } else {
+                    driverMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div style="background-color: #2196F3; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(map).bindPopup('Driver Location');
+                }
+                
+                // Update ETA
+                const etaMinutes = Math.round(10 * (1 - progress));
+                document.getElementById('eta').textContent = `${etaMinutes} minutes`;
+            }
+            
+            // Update driver location every 5 seconds
+            updateDriverLocation();
+            setInterval(updateDriverLocation, 5000);
+        {% endif %}
+    });
+</script>
+{% endblock %}
